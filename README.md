@@ -1,7 +1,6 @@
 MaskedVByte
 ===========
-[![Ubuntu 22.04 CI (GCC 11)](https://github.com/lemire/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/lemire/MaskedVByte/actions/workflows/ubuntu.yml)
-
+[![Ubuntu](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml)
 
 Fast decoder for VByte-compressed integers in C.
 
