@@ -43,8 +43,8 @@ $(LIBNAME): $(OBJECTS)
 
 
 
-example: ./example.c    $(HEADERS) $(OBJECTS)
-	$(CC) $(CFLAGS) -o example ./example.c -Iinclude  $(OBJECTS)
+example: ./examples/example.c    $(HEADERS) $(OBJECTS)
+	$(CC) $(CFLAGS) -o example ./examples/example.c -Iinclude  $(OBJECTS)
 
 unit: ./tests/unit.c    $(HEADERS) $(OBJECTS)
 	$(CC) $(CFLAGS) -o unit ./tests/unit.c -Iinclude  $(OBJECTS)

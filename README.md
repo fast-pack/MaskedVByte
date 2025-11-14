@@ -2,30 +2,98 @@ MaskedVByte
 ===========
 [![Ubuntu](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml)
 
-Fast decoder for VByte-compressed integers in C.
+Fast, vectorized VByte decoding for 32‑bit integers in C, with optional differential (delta) coding.
 
-It includes fast differential coding.
+- Requires x86-64 with SSE4.1 (available on virtually all modern x64 CPUs)
+- C99 compatible
+- Includes a tiny test and a runnable example
 
-We require x64 processors support SSE 4.1 or better. This includes virtually all x64 processors in service today, except for very old or specialized processors.
+Platform notes
+--------------
+- The library and tests build on Linux and macOS with a standard C toolchain.
+- The Makefile installs a shared object named `libmaskedvbyte.so` and uses `ldconfig`, which are Linux specific. On macOS, build and run targets work, but the `install` target is not applicable.
 
-The code should build using most standard-compliant modern C compilers (C99). The provided makefile
-expects a Linux-like system.
 
+Build and test
+--------------
 
-Usage:
-
-      make
-      ./unit 
-
-See example.c for an example.
-
-Short code sample:
-
-```C
-size_t compsize = vbyte_encode(datain, N, compressedbuffer); // encoding
-// here the result is stored in compressedbuffer using compsize bytes
-size_t compsize2 = masked_vbyte_decode(compressedbuffer, recovdata, N); // decoding (fast)
+```sh
+make        # builds the library and the test binary
+./unit      # runs a quick correctness test
 ```
+
+Build and run the example
+-------------------------
+
+```sh
+make example
+./example
+```
+
+You should see something like:
+
+```
+Compressed 5000 integers down to 5000 bytes.
+```
+
+Embedded example, explained
+---------------------------
+The example allocates input/output buffers, encodes a flat array of integers with classic VByte, then decodes it back with the masked (vectorized) decoder and verifies the sizes match.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <assert.h>
+
+#include "varintencode.h"
+#include "varintdecode.h"
+
+int main() {
+            int N = 5000;
+            uint32_t * datain = malloc(N * sizeof(uint32_t));
+            uint8_t * compressedbuffer = malloc(N * sizeof(uint32_t));
+            uint32_t * recovdata = malloc(N * sizeof(uint32_t));
+            for (int k = 0; k < N; ++k)
+                        datain[k] = 120; // constant value fits in one VByte
+            size_t compsize = vbyte_encode(datain, N, compressedbuffer); // encoding
+            // result is stored in 'compressedbuffer' using 'compsize' bytes
+            size_t compsize2 = masked_vbyte_decode(compressedbuffer, recovdata, N); // fast decoding
+            assert(compsize == compsize2); // sanity check
+            free(datain);
+            free(compressedbuffer);
+            free(recovdata);
+            printf("Compressed %d integers down to %d bytes.\n", N, (int)compsize);
+            return 0;
+}
+```
+
+What’s happening:
+- VByte uses a continuation bit; small values like 120 encode to a single byte, so 5000 values compress to 5000 bytes.
+- `masked_vbyte_decode` is a vectorized decoder using SSE4.1 for speed.
+- Differential coding variants are available when your data is sorted or has small gaps.
+
+API at a glance
+---------------
+Headers are in `include/`.
+
+- Encoding
+      - `size_t vbyte_encode(const uint32_t* in, size_t length, uint8_t* bout);`
+      - `size_t vbyte_encode_delta(const uint32_t* in, size_t length, uint8_t* bout, uint32_t prev);`
+
+- Decoding
+      - `size_t masked_vbyte_decode(const uint8_t* in, uint32_t* out, uint64_t length);`
+      - `size_t masked_vbyte_decode_delta(const uint8_t* in, uint32_t* out, uint64_t length, uint32_t prev);`
+      - `size_t masked_vbyte_decode_fromcompressedsize(const uint8_t* in, uint32_t* out, size_t inputsize);`
+      - `size_t masked_vbyte_decode_fromcompressedsize_delta(const uint8_t* in, uint32_t* out, size_t inputsize, uint32_t prev);`
+      - Random access helpers for delta streams:
+            - `uint32_t masked_vbyte_select_delta(const uint8_t *in, uint64_t length, uint32_t prev, size_t slot);`
+            - `int masked_vbyte_search_delta(const uint8_t *in, uint64_t length, uint32_t prev, uint32_t key, uint32_t *presult);`
+
+Tips
+----
+- Prefer delta coding when your sequence is sorted or has small differences; it often reduces the number of bytes per integer.
+- If you know the compressed byte length, use the `*_fromcompressedsize` functions to decode exactly that many bytes.
+
 
 Interesting applications 
 -----------------------
@@ -58,5 +126,10 @@ See also
 * libvbyte: A fast implementation for varbyte 32bit/64bit integer compression https://github.com/cruppstahl/libvbyte
 * TurboPFor is a C library that offers lots of interesting optimizations. Well worth checking! (GPL license) https://github.com/powturbo/TurboPFor
 * Oroch is a C++ library that offers a usable API (MIT license) https://github.com/ademakov/Oroch
+
+
+License
+-------
+See `LICENSE` for details.
 
 

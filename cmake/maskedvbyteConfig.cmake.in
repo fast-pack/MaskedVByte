@@ -1,0 +1,8 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+# Add find_dependency(...) here if the library gains external deps
+
+include("${CMAKE_CURRENT_LIST_DIR}/maskedvbyteTargets.cmake")
+
+check_required_components(maskedvbyte)
