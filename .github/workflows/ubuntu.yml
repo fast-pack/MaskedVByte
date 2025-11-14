@@ -11,3 +11,9 @@ jobs:
         run: |
           make &&
           ./unit 
+      - name: Use CMake
+        run: |
+          cmake -B build &&
+          cmake --build build &&
+          ctest --test-dir build
+

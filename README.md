@@ -6,12 +6,6 @@ Fast, vectorized VByte decoding for 32‑bit integers in C, with optional differ
 
 - Requires x86-64 with SSE4.1 (available on virtually all modern x64 CPUs)
 - C99 compatible
-- Includes a tiny test and a runnable example
-
-Platform notes
---------------
-- The library and tests build on Linux and macOS with a standard C toolchain.
-- The Makefile installs a shared object named `libmaskedvbyte.so` and uses `ldconfig`, which are Linux specific. On macOS, build and run targets work, but the `install` target is not applicable.
 
 
 Build and test
@@ -20,6 +14,27 @@ Build and test
 ```sh
 make        # builds the library and the test binary
 ./unit      # runs a quick correctness test
+```
+
+CMake build (alternative)
+------------------------
+
+```sh
+mkdir -p build
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+      -DMASKEDVBYTE_BUILD_TESTS=ON \
+      -DMASKEDVBYTE_BUILD_EXAMPLES=ON
+cmake --build build -j
+ctest --test-dir build --output-on-failure   # optional
+
+# run the example built by CMake
+./build/example
+```
+
+Install with CMake (optional):
+
+```sh
+cmake --install build --prefix /usr/local
 ```
 
 Build and run the example
@@ -93,6 +108,24 @@ Tips
 ----
 - Prefer delta coding when your sequence is sorted or has small differences; it often reduces the number of bytes per integer.
 - If you know the compressed byte length, use the `*_fromcompressedsize` functions to decode exactly that many bytes.
+
+
+Use from your CMake project
+---------------------------
+
+After installation (see above):
+
+```cmake
+find_package(maskedvbyte CONFIG REQUIRED)
+target_link_libraries(your_target PRIVATE maskedvbyte::maskedvbyte)
+```
+
+Or as a subdirectory (vendored):
+
+```cmake
+add_subdirectory(path/to/MaskedVByte)
+target_link_libraries(your_target PRIVATE maskedvbyte::maskedvbyte)
+```
 
 
 Interesting applications 
