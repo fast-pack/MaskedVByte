@@ -131,10 +131,8 @@ target_link_libraries(your_target PRIVATE maskedvbyte::maskedvbyte)
 Interesting applications 
 -----------------------
 
-Greg Bowyer has integrated Masked VByte into Lucene, for higher speeds :
-
-https://github.com/GregBowyer/lucene-solr/tree/intrinsics
-
+- [Greg Bowyer has integrated Masked VByte into Lucene, for higher speeds](https://github.com/GregBowyer/lucene-solr/tree/intrinsics).
+- Our fast function is also used by [PISA: Performant Indexes and Search for Academia](https://github.com/pisa-engine/pisa).
 
 Reference
 -------------
