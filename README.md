@@ -1,11 +1,13 @@
 MaskedVByte
 ===========
 [![Ubuntu](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml)
+[![macOS (ARM64)](https://github.com/fast-pack/MaskedVByte/actions/workflows/macos.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/macos.yml)
 
 Fast, vectorized VByte decoding for 32‑bit integers in C, with optional differential (delta) coding.
 
-- Requires x86-64 with SSE4.1 (available on virtually all modern x64 CPUs)
+- Runs on x86-64 with SSE4.1 (available on virtually all modern x64 CPUs) and on 64-bit ARM (AArch64) such as Apple Silicon and AWS Graviton, where it uses NEON via `include/sse_to_neon.h`
 - C99 compatible
+- The build systems select the right SIMD flags automatically: `-msse4.1` on x86-64, no extra flag on AArch64 (NEON is part of the ARMv8 baseline)
 
 
 Build and test
@@ -84,7 +86,7 @@ int main() {
 
 What’s happening:
 - VByte uses a continuation bit; small values like 120 encode to a single byte, so 5000 values compress to 5000 bytes.
-- `masked_vbyte_decode` is a vectorized decoder using SSE4.1 for speed.
+- `masked_vbyte_decode` is a vectorized decoder using SSE4.1 (x86-64) or NEON (AArch64) for speed.
 - Differential coding variants are available when your data is sorted or has small gaps.
 
 API at a glance

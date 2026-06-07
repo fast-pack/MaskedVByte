@@ -20,6 +20,10 @@
             (result) = (uint32_t)(index); \
         } \
     } while (0)
+#elif defined(__aarch64__) || defined(_M_ARM64)
+#include "sse_to_neon.h"
+# define SIMDCOMP_CTZ(result, mask) \
+    result = __builtin_ctz(mask)
 #else
 #include <x86intrin.h>
 # define SIMDCOMP_CTZ(result, mask) \

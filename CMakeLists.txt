@@ -38,11 +38,14 @@ target_include_directories(maskedvbyte
         $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
 )
 
-# Enable SSE4.1 on GCC/Clang when available
-if (CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
-    check_c_compiler_flag("-msse4.1" HAS_SSE41_FLAG)
-    if (HAS_SSE41_FLAG)
-        target_compile_options(maskedvbyte PRIVATE -msse4.1)
+# On x86/x86-64 the vectorized decoder needs SSE4.1. On 64-bit ARM it uses the
+# NEON baseline via include/sse_to_neon.h, which needs no extra compiler flag.
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|amd64|AMD64|i[3-6]86|x86")
+    if (CMAKE_C_COMPILER_ID MATCHES "Clang|AppleClang|GNU")
+        check_c_compiler_flag("-msse4.1" HAS_SSE41_FLAG)
+        if (HAS_SSE41_FLAG)
+            target_compile_options(maskedvbyte PRIVATE -msse4.1)
+        endif()
     endif()
 endif()
 
