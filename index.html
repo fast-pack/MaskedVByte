@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MaskedVByte — Fast vectorized VByte integer decoding in C</title>
+  <meta name="description" content="MaskedVByte is a fast, SIMD-accelerated library for decoding VByte-compressed 32-bit integers in C, with optional differential (delta) coding. Decode billions of integers per second.">
+  <meta name="author" content="Daniel Lemire, Jeff Plaisance, Nathan Kurz">
+  <link rel="icon" type="image/svg+xml" href="logo.svg">
+  <meta property="og:title" content="MaskedVByte — Fast vectorized VByte decoding">
+  <meta property="og:description" content="SIMD-accelerated VByte integer decoding in C. Decode billions of integers per second.">
+  <meta property="og:type" content="website">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-inner">
+    <a class="brand" href="#top">
+      <img src="logo.svg" alt="">
+      <span><b>Masked</b><small>VByte</small></span>
+    </a>
+    <nav class="nav-links" id="navlinks">
+      <a href="#features">Features</a>
+      <a href="#performance">Performance</a>
+      <a href="#quickstart">Quick start</a>
+      <a href="#api">API</a>
+      <a href="#cite">Cite</a>
+      <a class="gh" href="https://github.com/fast-pack/MaskedVByte" target="_blank" rel="noopener">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>
+        GitHub
+      </a>
+    </nav>
+    <button class="menu-toggle" id="menu" aria-label="Toggle menu">☰</button>
+  </div>
+</header>
+
+<a id="top"></a>
+<section class="hero">
+  <div class="wrap">
+    <span class="eyebrow">SIMD integer compression · C99</span>
+    <h1>Decode billions of integers<br>per second.</h1>
+    <p class="lead">
+      <b>MaskedVByte</b> is a fast, vectorized decoder for VByte-compressed 32‑bit integers,
+      with optional differential (delta) coding. It turns the venerable byte-oriented
+      varint format into a <b>SIMD-accelerated</b> data path.
+    </p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#quickstart">Get started →</a>
+      <a class="btn btn-ghost" href="https://github.com/fast-pack/MaskedVByte" target="_blank" rel="noopener">View on GitHub</a>
+    </div>
+    <div class="badges">
+      <a href="https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml" target="_blank" rel="noopener">
+        <img src="https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg" alt="Ubuntu CI status">
+      </a>
+      <img src="https://img.shields.io/badge/license-Apache%202.0-blue.svg" alt="License Apache 2.0">
+      <img src="https://img.shields.io/badge/language-C99-orange.svg" alt="C99">
+      <img src="https://img.shields.io/badge/SIMD-SSE4.1-success.svg" alt="SSE4.1">
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="stats">
+      <div class="stat"><div class="num">6.7 GB/s</div><div class="label">Plain decode throughput</div></div>
+      <div class="stat"><div class="num">2.2B/s</div><div class="label">Delta integers per second</div></div>
+      <div class="stat"><div class="num">~2×</div><div class="label">Faster than scalar VByte</div></div>
+      <div class="stat"><div class="num">1 file</div><div class="label">Drop-in C library</div></div>
+    </div>
+    <p class="note">Measured on a single core decoding 16M integers; see <a href="#performance">Performance</a> for details.</p>
+  </div>
+</section>
+
+<!-- ---------- Features ---------- -->
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Why MaskedVByte?</h2>
+      <p>The classic VByte (varint) format is compact and ubiquitous — MaskedVByte makes it fast to read back.</p>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="ico">⚡</div>
+        <h3>Vectorized decoding</h3>
+        <p>Uses SSE4.1 to decode many integers at once with a mask-driven shuffle, instead of branching byte by byte.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📦</div>
+        <h3>Standard VByte format</h3>
+        <p>Reads ordinary continuation-bit varints. Compatible with the format used across search engines and databases.</p>
+      </div>
+      <div class="card">
+        <div class="ico">📈</div>
+        <h3>Differential coding</h3>
+        <p>Built-in delta variants for sorted sequences and small gaps — fewer bytes per integer and even faster decoding.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔎</div>
+        <h3>Random access</h3>
+        <p><code>select</code> and <code>search</code> helpers let you jump into and scan delta-coded streams without full decompression.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🪶</div>
+        <h3>Tiny &amp; portable</h3>
+        <p>Plain C99 with a clean header API. No dependencies. Builds with <code>make</code> or CMake; vendor it or install it.</p>
+      </div>
+      <div class="card">
+        <div class="ico">🔬</div>
+        <h3>Research-backed</h3>
+        <p>The algorithm is described in a peer-reviewed paper and shipped in production search systems such as Lucene forks.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- How it works ---------- -->
+<section style="padding-top:0">
+  <div class="wrap two-col">
+    <div class="prose">
+      <h3>How it works</h3>
+      <p>
+        In the VByte format, each integer is stored in one to five bytes. The high bit of
+        each byte — the <b>continuation bit</b> — says whether the integer continues into the
+        next byte. A scalar decoder walks the stream one byte at a time, branching on every bit.
+      </p>
+      <p>MaskedVByte instead:</p>
+      <ul>
+        <li>Loads a 16‑byte block and extracts all continuation bits into a <b>mask</b> in one move.</li>
+        <li>Uses the mask to look up a <b>shuffle pattern</b> that gathers the right bytes for several integers at once.</li>
+        <li>Reconstructs the integers in parallel SIMD lanes, then advances past the bytes it consumed.</li>
+      </ul>
+      <p>
+        The result is a decoder whose cost is driven by data width rather than per-byte
+        branching — turning unpredictable branches into predictable vector work.
+      </p>
+    </div>
+    <div class="code-wrap">
+      <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">vbyte_stream</span></div>
+<pre><code><span class="tok-c">// 4 integers → variable-length bytes</span>
+<span class="tok-c">// high bit = "continues"</span>
+
+  <span class="tok-n">120</span>  → [<span class="tok-n">0x78</span>]
+ <span class="tok-n">1000</span>  → [<span class="tok-n">0xE8</span> <span class="tok-n">0x07</span>]
+    <span class="tok-n">3</span>  → [<span class="tok-n">0x03</span>]
+<span class="tok-n">70000</span>  → [<span class="tok-n">0xF0</span> <span class="tok-n">0xA2</span> <span class="tok-n">0x04</span>]
+
+<span class="tok-c">/* scalar: branch on every byte
+   masked: read the mask once,
+           shuffle, decode in lanes  */</span></code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- Quick start ---------- -->
+<section id="quickstart">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Quick start</h2>
+      <p>Clone, build, and decode in a few lines. Requires an x86‑64 CPU with SSE4.1 (an ARM/NEON shim is also included).</p>
+    </div>
+    <div class="two-col">
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">build.sh</span></div>
+<pre><code><span class="tok-c"># clone</span>
+git clone https://github.com/fast-pack/MaskedVByte
+<span class="tok-k">cd</span> MaskedVByte
+
+<span class="tok-c"># build the library + tests</span>
+make
+./unit          <span class="tok-c"># quick correctness test</span>
+
+<span class="tok-c"># or with CMake</span>
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build -j
+ctest --test-dir build</code></pre>
+      </div>
+      <div class="code-wrap">
+        <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">example.c</span></div>
+<pre><code><span class="tok-p">#include</span> <span class="tok-s">"varintencode.h"</span>
+<span class="tok-p">#include</span> <span class="tok-s">"varintdecode.h"</span>
+
+<span class="tok-t">int</span> <span class="tok-f">main</span>(<span class="tok-t">void</span>) {
+  <span class="tok-t">int</span> N = <span class="tok-n">5000</span>;
+  <span class="tok-t">uint32_t</span> *in     = <span class="tok-f">malloc</span>(N * <span class="tok-k">sizeof</span>(<span class="tok-t">uint32_t</span>));
+  <span class="tok-t">uint8_t</span>  *comp   = <span class="tok-f">malloc</span>(N * <span class="tok-k">sizeof</span>(<span class="tok-t">uint32_t</span>));
+  <span class="tok-t">uint32_t</span> *recov  = <span class="tok-f">malloc</span>(N * <span class="tok-k">sizeof</span>(<span class="tok-t">uint32_t</span>));
+
+  <span class="tok-k">for</span> (<span class="tok-t">int</span> k = <span class="tok-n">0</span>; k &lt; N; ++k) in[k] = <span class="tok-n">120</span>;
+
+  <span class="tok-c">// encode with classic VByte ...</span>
+  <span class="tok-t">size_t</span> n = <span class="tok-f">vbyte_encode</span>(in, N, comp);
+  <span class="tok-c">// ... decode fast with MaskedVByte</span>
+  <span class="tok-f">masked_vbyte_decode</span>(comp, recov, N);
+
+  <span class="tok-f">printf</span>(<span class="tok-s">"Compressed %d ints to %zu bytes\n"</span>, N, n);
+}</code></pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- Performance ---------- -->
+<section id="performance">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Performance</h2>
+      <p>Throughput from the bundled benchmark decoding 16,777,216 integers, 5 repeats, single core.</p>
+    </div>
+    <div class="code-wrap">
+      <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">./benchmark</span></div>
+<pre><code>MaskedVByte benchmark: 16777216 integers, 5 repeats
+
+<span class="tok-f">plain decode</span> : <span class="tok-n">1384.94</span> mis/s   (<span class="tok-s">6.751 GB/s</span>, 4.87 bytes/int)
+<span class="tok-f">delta decode</span> : <span class="tok-n">2221.56</span> mis/s   (<span class="tok-s">3.341 GB/s</span>, 1.50 bytes/int)
+<span class="tok-f">select_delta</span> : validated (100000 random slots)
+<span class="tok-f">search_delta</span> : validated (100000 random keys)
+
+All results validated. Code looks good.</code></pre>
+    </div>
+    <p class="note">
+      Figures above are from one representative run on Apple Silicon via the NEON shim; absolute numbers
+      vary by CPU and data. On x86‑64 with SSE4.1, the original studies report MaskedVByte decoding at
+      roughly twice the speed of an optimized scalar VByte decoder.
+    </p>
+  </div>
+</section>
+
+<!-- ---------- API ---------- -->
+<section id="api">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>API at a glance</h2>
+      <p>The full surface is two headers in <code>include/</code>. Here are the functions you will reach for most.</p>
+    </div>
+    <table class="api-table">
+      <thead><tr><th>Function</th><th>What it does</th></tr></thead>
+      <tbody>
+        <tr><td colspan="2"><span class="api-cat">Encoding</span></td></tr>
+        <tr><td><code>vbyte_encode(in, length, bout)</code></td><td class="desc">Encode an array of integers with classic VByte.</td></tr>
+        <tr><td><code>vbyte_encode_delta(in, length, bout, prev)</code></td><td class="desc">Delta-encode a sorted array starting from <code>prev</code>.</td></tr>
+        <tr><td colspan="2"><span class="api-cat">Decoding</span></td></tr>
+        <tr><td><code>masked_vbyte_decode(in, out, length)</code></td><td class="desc">Vectorized decode of <code>length</code> integers.</td></tr>
+        <tr><td><code>masked_vbyte_decode_delta(in, out, length, prev)</code></td><td class="desc">Vectorized decode of a delta-coded stream.</td></tr>
+        <tr><td><code>masked_vbyte_decode_fromcompressedsize(in, out, inputsize)</code></td><td class="desc">Decode exactly <code>inputsize</code> compressed bytes.</td></tr>
+        <tr><td><code>masked_vbyte_decode_fromcompressedsize_delta(...)</code></td><td class="desc">Same, for a delta-coded stream.</td></tr>
+        <tr><td colspan="2"><span class="api-cat">Random access (delta)</span></td></tr>
+        <tr><td><code>masked_vbyte_select_delta(in, length, prev, slot)</code></td><td class="desc">Return the value at a given position.</td></tr>
+        <tr><td><code>masked_vbyte_search_delta(in, length, prev, key, presult)</code></td><td class="desc">Find the first value ≥ <code>key</code>.</td></tr>
+      </tbody>
+    </table>
+    <p class="note">Prefer the delta variants when your data is sorted or has small gaps — fewer bytes and faster decoding.</p>
+  </div>
+</section>
+
+<!-- ---------- Use from CMake ---------- -->
+<section style="padding-top:0">
+  <div class="wrap two-col">
+    <div class="prose">
+      <h3>Use it from your project</h3>
+      <p>
+        After <code>cmake --install</code>, link against the exported target — or vendor the
+        repository and add it as a subdirectory. Either way you get
+        <code>maskedvbyte::maskedvbyte</code>.
+      </p>
+      <p>The library is released under the permissive Apache 2.0 license, so it drops cleanly into both open-source and commercial projects.</p>
+    </div>
+    <div class="code-wrap">
+      <div class="code-bar"><span class="dot r"></span><span class="dot y"></span><span class="dot g"></span><span class="fname">CMakeLists.txt</span></div>
+<pre><code><span class="tok-c"># installed package</span>
+<span class="tok-f">find_package</span>(maskedvbyte CONFIG REQUIRED)
+<span class="tok-f">target_link_libraries</span>(your_target
+  PRIVATE maskedvbyte::maskedvbyte)
+
+<span class="tok-c"># or vendored as a subdirectory</span>
+<span class="tok-f">add_subdirectory</span>(path/to/MaskedVByte)
+<span class="tok-f">target_link_libraries</span>(your_target
+  PRIVATE maskedvbyte::maskedvbyte)</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- Citation ---------- -->
+<section id="cite">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Citing this work</h2>
+      <p>If MaskedVByte helps your research, please cite the papers behind it.</p>
+    </div>
+    <div class="cite">
+      Jeff Plaisance, Nathan Kurz, Daniel Lemire.
+      <b>Vectorized VByte Decoding.</b>
+      International Symposium on Web Algorithms (iSWAG), 2015.
+      <a href="https://arxiv.org/abs/1503.07387" target="_blank" rel="noopener">arXiv:1503.07387</a>
+    </div>
+    <div class="cite">
+      Daniel Lemire, Nathan Kurz, Christoph Rupp.
+      <b>Stream VByte: Faster Byte-Oriented Integer Compression.</b>
+      Information Processing Letters 130, February 2018, pp. 1–6.
+      <a href="https://arxiv.org/abs/1709.08990" target="_blank" rel="noopener">arXiv:1709.08990</a>
+    </div>
+  </div>
+</section>
+
+<!-- ---------- Related ---------- -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Related libraries</h2>
+      <p>Part of a broader family of high-performance integer compression tools.</p>
+    </div>
+    <div class="related">
+      <a href="https://github.com/lemire/streamvbyte" target="_blank" rel="noopener"><b>StreamVByte</b><span>Faster VByte with a separate control stream</span></a>
+      <a href="https://github.com/lemire/simdcomp" target="_blank" rel="noopener"><b>simdcomp</b><span>SIMD binary packing of integers</span></a>
+      <a href="https://github.com/lemire/FastPFor" target="_blank" rel="noopener"><b>FastPFor</b><span>Fast integer compression in C++</span></a>
+      <a href="https://github.com/lemire/SIMDCompressionAndIntersection" target="_blank" rel="noopener"><b>SIMDCompression</b><span>Compress &amp; intersect sorted lists</span></a>
+      <a href="https://github.com/lemire/JavaFastPFOR" target="_blank" rel="noopener"><b>JavaFastPFOR</b><span>Integer compression for the JVM</span></a>
+      <a href="https://github.com/lemire/LittleIntPacker" target="_blank" rel="noopener"><b>LittleIntPacker</b><span>Pack short arrays as fast as possible</span></a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-inner">
+    <div>© 2015–2026 Daniel Lemire and contributors · Apache 2.0</div>
+    <div style="display:flex; gap:22px;">
+      <a href="https://github.com/fast-pack/MaskedVByte" target="_blank" rel="noopener">GitHub</a>
+      <a href="https://github.com/fast-pack/MaskedVByte/blob/master/LICENSE" target="_blank" rel="noopener">License</a>
+      <a href="https://lemire.me/blog/" target="_blank" rel="noopener">Blog</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  var menu = document.getElementById('menu');
+  var links = document.getElementById('navlinks');
+  menu.addEventListener('click', function () { links.classList.toggle('open'); });
+  links.addEventListener('click', function (e) {
+    if (e.target.tagName === 'A') links.classList.remove('open');
+  });
+</script>
+</body>
+</html>
