@@ -1,7 +1,6 @@
 MaskedVByte
 ===========
 [![Ubuntu](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/ubuntu.yml)
-[![macOS (ARM64)](https://github.com/fast-pack/MaskedVByte/actions/workflows/macos.yml/badge.svg)](https://github.com/fast-pack/MaskedVByte/actions/workflows/macos.yml)
 
 Fast, vectorized VByte decoding for 32‑bit integers in C, with optional differential (delta) coding.
 
